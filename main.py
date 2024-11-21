@@ -27,7 +27,7 @@ chord_increment = 0.02
 twist_value = 0
 
 file_name = "test.xfl"
-xflr_file_path = os.path.join(project_workspace, file_name)
+xflr_file_path = os.path.join(project_workspace, "xfl files" , file_name)
 
 airfoils_folder_name = "airfoils"
 airfoils_file_path = os.path.join(project_workspace, airfoils_folder_name)
@@ -373,7 +373,7 @@ class ThreeDAnalysis:
                         fz_value = results.FZ
 
                         for alpha, clcd , fz in zip(alpha_values, clcd_value, fz_value):
-                            if fz > 180: ## make this variable
+                            if fz > 1: ## make this variable
                                 self.result_list.append((plane_name, alpha, clcd, fz, aspect_ratio))
                         break
                     except msgpackrpc.error.TransportError as e:
@@ -383,23 +383,41 @@ class ThreeDAnalysis:
             except Exception as e:
                 logger.warning(f"Failed to parse XML for plane {plane_name}: {e}")
 
-        sorted_results = sorted(self.result_list, key=lambda x: x[2], reverse=True)
-        top_10_results = sorted_results[:10]
-        return sorted_results, top_10_results
-    
+        return self.result_list
+
+class ResultViewer():
+    def __init__(self):
+        self.results = None
+        self.sorted_results = None
+
+    def load_the_resutls(self, results):
+        if results:
+            logger.info(results)
+            self.results = results
+        else:
+            logger.critical("There is 0 possible planes based on constrains or there is error in contrains!!!")
+            self.results = []
+
+    def sort_the_results(self):
+        self.sorted_results = sorted(self.results, key=lambda x: x[2], reverse=True)
+
+    def top_10_result(self):
+        top_10 = self.sorted_results[:10]
+        return top_10
+
 gui = xflrpyGUI()
 gui.load_the_project(xflr_file_path)
 
 analysisTwoD = TwoDAnalysis(xflr_file_path, gui)
-analysisTwoD.import_foils_from_folder(airfoils_file_path)
+# analysisTwoD.import_foils_from_folder(airfoils_file_path)
 analysisTwoD.check_all_foil_names()
 
 logger.info(analysisTwoD.get_all_foil_names())
 
-analysisTwoD.start_the_2d_analysis()
+# analysisTwoD.start_the_2d_analysis()
 
 # my_plane = Three_D_Plane()
-# my_plane.set_chord(0.4, 0.5, 0.1)
+# my_plane.set_chord(0.2, 0.3, 0.1)
 # my_plane.set_twist(0)
 # my_plane.set_wing_span(1,1.2,0.2)
 
@@ -407,16 +425,48 @@ analysisTwoD.start_the_2d_analysis()
 # PlaneGen = XmlPlaneGenerator(my_plane, xml_planes_folder_path, analysisTwoD)
 # PlaneGen.plane_generator()
 
-# input("enter when ready")
+input("enter when ready")
 
-threeD = ThreeDAnalysis(gui,analysisTwoD,xml_planes_folder_path)
-sorted, top_10 = threeD.ThreeDAnalysis()
+threeD = ThreeDAnalysis(gui, analysisTwoD, xml_planes_folder_path)
+results = threeD.ThreeDAnalysis()
 
-for i, result in enumerate(top_10, start=1):
-    span, chord, twist, foil, alpha, clcd, fz, aspect_ratio = result
-    print(f"{i}. CL/CD: {clcd}, FZ: {fz} | Span: {span}m, Chord: {chord}m, Twist: {twist}°, Airfoil: {foil}, Alpha: {alpha}°, Aspect Ratio: {aspect_ratio}")
+resultviewer = ResultViewer()
+resultviewer.load_the_resutls(results)
+resultviewer.sort_the_results()
+best = resultviewer.top_10_result()
 
-max_result = sorted[0]
-max_span, max_chord, max_twist, max_foil_name, max_alpha, max_clcd, max_fz, max_aspect_ratio = max_result
 
-print(f"\nThe highest CL/CD value is {max_clcd} with FZ value {max_fz} for a wing span of {max_span} meters, chord {max_chord} meters, twist {max_twist} degrees, airfoil {max_foil_name}, alpha {max_alpha} degrees, and aspect ratio {max_aspect_ratio}.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# for i, result in enumerate(top_10, start=1):
+#     span, chord, twist, foil, alpha, clcd, fz, aspect_ratio = result
+    # print(f"{i}. CL/CD: {clcd}, FZ: {fz} | Span: {span}m, Chord: {chord}m, Twist: {twist}°, Airfoil: {foil}, Alpha: {alpha}°, Aspect Ratio: {aspect_ratio}")
+
+# max_result = sorted[0]
+# max_span, max_chord, max_twist, max_foil_name, max_alpha, max_clcd, max_fz, max_aspect_ratio = max_result
+
+# print(f"\nThe highest CL/CD value is {max_clcd} with FZ value {max_fz} for a wing span of {max_span} meters, chord {max_chord} meters, twist {max_twist} degrees, airfoil {max_foil_name}, alpha {max_alpha} degrees, and aspect ratio {max_aspect_ratio}.")
