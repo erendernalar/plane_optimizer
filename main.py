@@ -319,7 +319,7 @@ class ThreeDAnalysis:
         self.foil = foil
         self.xml_folder_path = xml_folder_path
         self.xml_planes = None
-        self.result_list = []
+        self.results_list = []
         
     def get_all_xml_planes(self):
         xml_planes = [f for f in os.listdir(self.xml_folder_path) if f.endswith('.xml')]
@@ -363,7 +363,7 @@ class ThreeDAnalysis:
                     try:
                         time.sleep(0.5)
                         results = miarex.analyze(wpolar_name, plane_name, analysis_settings,
-                                                result_list=[enumWPolarResult.ALPHA, enumWPolarResult.CLCD, enumWPolarResult.FZ])
+                                                result_list=[enumWPolarResult.ALPHA, enumWPolarResult.CLCD, enumWPolarResult.FZ]) #varible name can be confusing fix it later
                         
                         logger.debug(f"Raw results for plane {plane_name}:")
                         logger.debug(results)
@@ -371,10 +371,13 @@ class ThreeDAnalysis:
                         alpha_values = results.alpha
                         clcd_value = results.ClCd
                         fz_value = results.FZ
+                        
+                        logger.info(fz_value)
 
                         for alpha, clcd , fz in zip(alpha_values, clcd_value, fz_value):
+                            logger.info(fz)
                             if fz > 1: ## make this variable
-                                self.result_list.append((plane_name, alpha, clcd, fz, aspect_ratio))
+                                self.results_list.append((plane_name, alpha, clcd, fz, aspect_ratio))#varible name can be confusing fix it later
                         break
                     except msgpackrpc.error.TransportError as e:
                         logger.warning(f"Error: {e}. Retrying {attempt + 1}/{max_retries}...")
@@ -383,16 +386,16 @@ class ThreeDAnalysis:
             except Exception as e:
                 logger.warning(f"Failed to parse XML for plane {plane_name}: {e}")
 
-        return self.result_list
+        return self.results_list #varible name can be confusing fix it later
 
 class ResultViewer():
     def __init__(self):
         self.results = None
         self.sorted_results = None
 
-    def load_the_resutls(self, results):
+    def load_the_results(self, results):
+        logger.info(results)
         if results:
-            logger.info(results)
             self.results = results
         else:
             logger.critical("There is 0 possible planes based on constrains or there is error in contrains!!!")
@@ -431,7 +434,7 @@ threeD = ThreeDAnalysis(gui, analysisTwoD, xml_planes_folder_path)
 results = threeD.ThreeDAnalysis()
 
 resultviewer = ResultViewer()
-resultviewer.load_the_resutls(results)
+resultviewer.load_the_results(results)
 resultviewer.sort_the_results()
 best = resultviewer.top_10_result()
 
